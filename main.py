@@ -133,7 +133,7 @@ async def search(keyword):
         list = []
         for index, row in movie_df.iterrows():
             if keyword in row['NAME']:
-                list.append(str(row.to_dict()))
+                list.append(dict_to_JSON_Str(row.to_dict()))
 
         res.status = 300
         res.msg = "操作成功"
@@ -201,6 +201,7 @@ async def knn_user(token, recommend_number_str):
                 recommend_number = 10
                 if len(recommend_number_str) > 0:
                     recommend_number = int(recommend_number_str)
+                item_based_algo, trainset = cf.item_based_KNN_algo_preparation(suprise_rating_path, 250)
                 recommend_list = cf.item_based_KNN_for_user(name, item_based_algo, trainset, recommend_number)
                 movie_df = pd.read_csv(movie_path)
                 recommendation = find_movie_list(movie_df, recommend_list)
@@ -232,13 +233,15 @@ async def knn_movie(movie_id, recommend_number_str):
             recommend_number = 10
             if len(recommend_number_str) > 0:
                 recommend_number = int(recommend_number_str)
-
+            item_based_algo, trainset = cf.item_based_KNN_algo_preparation(suprise_rating_path, 250)
             recommend_list = cf.item_based_KNN_for_item(movie_id, item_based_algo, trainset, recommend_number)
             movie_df = pd.read_csv(movie_path)
+            movie_df = movie_df.fillna("")
             recommendation = find_movie_list(movie_df, recommend_list)
             res.status = 300
             res.msg = "操作成功"
             res.recommendation = recommendation
+            print(recommendation)
         
     except:
         res.status = 500
@@ -263,6 +266,7 @@ async def content_based(token, recommend_number_str):
             rating_df = pd.read_csv(rating_path)
             recommend_list = recommend_list = cb.content_based_recommend(name, movie_feature_df, movie_df, rating_df, recommend_number)
             movie_df = pd.read_csv(movie_path)
+            movie_df.fillna("")
             recommendation = find_movie_list(movie_df, recommend_list)
             res.status = 300
             res.msg = "操作成功"
@@ -290,5 +294,10 @@ def find_movie_list(movie_df, movie_list):
     for movie_id in movie_list:
         movies = movie_df[movie_df["MOVIE_ID"] == int(movie_id)]
         for movie in movies.to_dict('records'):
-            recommendation.append(str(movie))
+            recommendation.append(dict_to_JSON_Str(movie))
     return recommendation
+
+def dict_to_JSON_Str(dictionary):
+    for key, value in dictionary.items():
+        dictionary[key] = str(value)
+    return json.dumps(dictionary, ensure_ascii=False)
