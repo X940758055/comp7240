@@ -107,7 +107,6 @@ async def login(user: reqUser):
             res.msg = "登陆成功"
             new_token = tk.generate_token(user.name)
             res.token = new_token
-            print(user_list)
             for index, row in user_list.iterrows():
                 if row['name'] == user.name:
                     user_list.at[index, 'token'] = new_token
@@ -130,6 +129,7 @@ async def search(keyword):
     res = respRecommmendation
     try:
         movie_df = pd.read_csv(movie_path)
+        movie_df = movie_df.fillna("")
         list = []
         for index, row in movie_df.iterrows():
             if keyword in row['NAME']:
@@ -156,13 +156,11 @@ async def score(req: reqScore):
         name, find = get_name_by_token(user_list, req.token)
         if find:
             ratings = []
-            print(req.scores)
             for score_info in req.scores:
-                print (score_info)
                 ratings.append({"USER_ID": name, "MOVIE_ID": score_info['movie_id'], "RATING": score_info['score']})
-            print(ratings)
+        
             new_ratings = pd.DataFrame(ratings, columns=['USER_ID', 'MOVIE_ID', 'RATING'])
-            print(new_ratings)
+            
             rating_df = pd.read_csv(rating_path)
             rating_df = rating_df.append(new_ratings,ignore_index=True)
             rating_df.reset_index()
@@ -236,12 +234,10 @@ async def knn_movie(movie_id, recommend_number_str):
             item_based_algo, trainset = cf.item_based_KNN_algo_preparation(suprise_rating_path, 250)
             recommend_list = cf.item_based_KNN_for_item(movie_id, item_based_algo, trainset, recommend_number)
             movie_df = pd.read_csv(movie_path)
-            movie_df = movie_df.fillna("")
             recommendation = find_movie_list(movie_df, recommend_list)
             res.status = 300
             res.msg = "操作成功"
             res.recommendation = recommendation
-            print(recommendation)
         
     except:
         res.status = 500
@@ -266,7 +262,6 @@ async def content_based(token, recommend_number_str):
             rating_df = pd.read_csv(rating_path)
             recommend_list = recommend_list = cb.content_based_recommend(name, movie_feature_df, movie_df, rating_df, recommend_number)
             movie_df = pd.read_csv(movie_path)
-            movie_df.fillna("")
             recommendation = find_movie_list(movie_df, recommend_list)
             res.status = 300
             res.msg = "操作成功"
@@ -290,6 +285,7 @@ def get_name_by_token(user_list, token):
     return "", False
 
 def find_movie_list(movie_df, movie_list):
+    movie_df = movie_df.fillna("")
     recommendation = []
     for movie_id in movie_list:
         movies = movie_df[movie_df["MOVIE_ID"] == int(movie_id)]
