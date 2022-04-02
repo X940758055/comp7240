@@ -2,8 +2,6 @@ import math
 import numpy as np
 import pandas as pd
 import content_based_function as cbf
-import random
- 
 
 
 
@@ -12,13 +10,6 @@ def content_based_recommend(user_id, movie_feature_df, movie_df, rating_df, k):
     user_ids = [user_id]
     user_rating_df = rating_df[rating_df['USER_ID'] == user_id]
     user_rating_df.reset_index(drop=True)
-    if len(user_rating_df) == 0:
-        res = []
-        for index, row in movie_df.iteritems():
-            if random.randint(0,200) == 100:
-                res.append(row['MOVIE_ID'])
-                if len(res) >= k:
-                    return res
     
     
     feature_list = []

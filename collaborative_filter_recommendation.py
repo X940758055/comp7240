@@ -53,7 +53,7 @@ def item_based_KNN_for_user(user_id, item_knn_algo, trainset, k):
         if not itemID in watched:
             recommendations.append(trainset.to_raw_iid(itemID))
             position += 1
-        if (position > k): 
+        if (position >= k): 
             break
     return recommendations
 
@@ -72,7 +72,7 @@ def item_based_KNN_for_item(item_id, item_knn_algo, trainset, k):
         if itemID != inner_i_id:
             recommendations.append(trainset.to_raw_iid(itemID))
             position += 1
-        if (position > k): 
+        if (position >= k): 
             break
     return recommendations
                 

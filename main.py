@@ -184,8 +184,8 @@ async def score(req: reqScore):
 
 
 
-@app.get("/knn/user/{token}")
-async def knn_user(token):
+@app.get("/knn/user/{token}/{recommend_number_str}")
+async def knn_user(token, recommend_number_str):
     res = respRecommmendation
     try:
         user_list = pd.read_csv(user_path)
@@ -199,6 +199,8 @@ async def knn_user(token):
                 res.recommendation = []
             else:
                 recommend_number = 10
+                if len(recommend_number_str) > 0:
+                    recommend_number = int(recommend_number_str)
                 recommend_list = cf.item_based_KNN_for_user(name, item_based_algo, trainset, recommend_number)
                 movie_df = pd.read_csv(movie_path)
                 recommendation = find_movie_list(movie_df, recommend_list)
@@ -216,8 +218,8 @@ async def knn_user(token):
         res.recommendation = []
     return {"status": res.status, "msg": res.msg, "recommendation": res.recommendation}
 
-@app.get("/knn/movie/{movie_id}")
-async def knn_movie(movie_id):
+@app.get("/knn/movie/{movie_id}/{recommend_number_str}")
+async def knn_movie(movie_id, recommend_number_str):
     res = respRecommmendation
     try:
         movie_pd = pd.read_csv(movie_path)
@@ -226,8 +228,10 @@ async def knn_movie(movie_id):
                 res.status = 301
                 res.msg = "操作成功,但无结果"
                 res.recommendation = []
-        else:
+        else: 
             recommend_number = 10
+            if len(recommend_number_str) > 0:
+                recommend_number = int(recommend_number_str)
 
             recommend_list = cf.item_based_KNN_for_item(movie_id, item_based_algo, trainset, recommend_number)
             movie_df = pd.read_csv(movie_path)
@@ -244,32 +248,34 @@ async def knn_movie(movie_id):
 
 
 
-@app.get("/contentbased/{token}")
-async def content_based(token):
+@app.get("/contentbased/{token}/{recommend_number_str}")
+async def content_based(token, recommend_number_str):
     res = respRecommmendation
-# try:
-    user_list = pd.read_csv(user_path)
-    name, find = get_name_by_token(user_list, token)
-    if find:
-        recommend_number = 10
-        movie_feature_df = pd.read_csv(movie_feature_path)
-        movie_df = pd.read_csv(movie_path)
-        rating_df = pd.read_csv(rating_path)
-        recommend_list = recommend_list = cb.content_based_recommend(name, movie_feature_df, movie_df, rating_df, recommend_number)
-        movie_df = pd.read_csv(movie_path)
-        recommendation = find_movie_list(movie_df, recommend_list)
-        res.status = 300
-        res.msg = "操作成功"
-        res.recommendation = recommendation
-    else:
-        res.status = 302
-        res.msg = "未认证用户"
+    try:
+        user_list = pd.read_csv(user_path)
+        name, find = get_name_by_token(user_list, token)
+        if find:
+            recommend_number = 10
+            if len(recommend_number_str) > 0:
+                recommend_number = int(recommend_number_str)
+            movie_feature_df = pd.read_csv(movie_feature_path)
+            movie_df = pd.read_csv(movie_path)
+            rating_df = pd.read_csv(rating_path)
+            recommend_list = recommend_list = cb.content_based_recommend(name, movie_feature_df, movie_df, rating_df, recommend_number)
+            movie_df = pd.read_csv(movie_path)
+            recommendation = find_movie_list(movie_df, recommend_list)
+            res.status = 300
+            res.msg = "操作成功"
+            res.recommendation = recommendation
+        else:
+            res.status = 302
+            res.msg = "未认证用户"
+            res.recommendation = []
+        
+    except:
+        res.status = 500
+        res.msg = "服务器错误"
         res.recommendation = []
-    
-# except:
-#     res.status = 500
-#     res.msg = "服务器错误"
-#     res.recommendation = []
     return {"status": res.status, "msg": res.msg, "recommendation": res.recommendation}
 
 
